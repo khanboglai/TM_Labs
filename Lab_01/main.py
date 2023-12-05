@@ -10,18 +10,30 @@ t = s.Symbol('t')
 r = 1 + s.sin(5 * t)
 phi = t
 
+# перевод из полярных координат в декартовы
 x = r * s.cos(phi)
 y = r * s.sin(phi)
 
-# считаем скорость
+# считаем скорость. производная перемещения
 Vx = s.diff(x)
 Vy = s.diff(y)
+Vmod = s.sqrt(Vx * Vx + Vy * Vy)
 
-# считаем ускорение
+# считаем ускорение. производная скорости
 Ax = s.diff(Vx)
 Ay = s.diff(Vy)
+Amod = s.sqrt(Ax * Ax + Ay * Ay) # нормальное ускорение
+Atau = s.diff(Vmod) # тангенсальное ускорение
 
-step = 1500
+# формула для радиуса кривизны
+'''
+Радиус кривизны - это квадрат скорости делный на корень из расности ускорений
+
+'''
+r = (Vmod * Vmod) / s.sqrt(Amod * Amod - Atau * Atau)
+
+
+step = 1000
 T = n.linspace(0, 10, step)
 X = n.zeros_like(T)
 Y = n.zeros_like(T)
@@ -29,6 +41,9 @@ VX = n.zeros_like(T)
 VY = n.zeros_like(T)
 AX = n.zeros_like(T)
 AY = n.zeros_like(T)
+
+R = n.zeros_like(T)
+
 
 
 for i in n.arange(len(T)):
@@ -41,6 +56,9 @@ for i in n.arange(len(T)):
     AX[i] = s.Subs(Ax, t, T[i])
     AY[i] = s.Subs(Ay, t, T[i])
 
+    # вектор кривизны
+    R[i] = s.Subs(r, t, T[i])
+
 
 
 
@@ -52,6 +70,7 @@ axis.plot(X, Y) # задачи числа на осях
 Pnt = axis.plot(X[0], Y[0], marker = 'o')[0] # добавили точку на графике
 Vp = axis.plot([X[0], X[0] + VX[0]], [Y[0], Y[0] + VY[0]], 'r')[0] # задали скорость на графике
 Ap = axis.plot([X[0], X[0] + AX[0]], [Y[0], Y[0] + AY[0]], 'y')[0] # задали ускорение на графике
+Radius = axis.plot([0, X[0]], [0, Y[0]], 'c')[0] # задали радиус на графике
 
 
 # создаем стрелку у вектора скорости
@@ -78,12 +97,14 @@ Aarrow = axis.plot(Rax, Ray, 'yellow')[0] # отображаем стрелку 
 # создаем функцию для анимации
 def anim(i):
     Pnt.set_data(X[i], Y[i]) # тут отображаем точку, она двигается, мы передаем раметр i
-    Vp.set_data([X[i], X[i] + VX[i]], [Y[i], Y[i] + VY[i]]) # тут отображаем наш график
+    Vp.set_data([X[i], X[i] + VX[i]], [Y[i], Y[i] + VY[i]]) # тут отображаем наши кривые
     Rvx, Rvy = Vect_arrow(X[i], Y[i], VX[i], VY[i]) # получаем данные для нашей стрелки
     Varrow.set_data(Rvx, Rvy) # отображаем стрелку в анимации
     Ap.set_data([X[i], X[i] + AX[i]], [Y[i], Y[i] + AY[i]])
     Rax, Ray = Vect_arrow(X[i], Y[i], AX[i], AY[i]) # получаем данные для нашей стрелки
     Aarrow.set_data(Rax, Ray) # отображаем стрелку в анимации
+
+    Radius.set_data([0, X[i]], [0, Y[i]]) # строим радиус по точкам на графике
 
 
 # тут создается сама анимация
