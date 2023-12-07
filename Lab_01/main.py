@@ -4,6 +4,29 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as n
 
+
+# создаем стрелку у вектора скорости
+def Vect_arrow(X, Y, Valx, Valy):
+    a = 0.2 
+    b = 0.3
+    Arx = n.array([-b, 0, -b])
+    Ary = n.array([a, 0, -a])
+    alpha = math.atan2(Valy, Valx) # угол через тангенс
+    RotArx = Arx * n.cos(alpha) - Ary * n.sin(alpha) # тут используем знания из линейной алгебры
+    RotAry = Arx * n.sin(alpha) + Ary * n.cos(alpha) # используем матрицу поворотов
+
+    RotArx += X + Valx
+    RotAry += Y + Valy
+    return RotArx, RotAry
+
+
+# нужна для радиуса кривизны матрица поворота
+def Rot2D(X, Y, Alpha):
+    RX = X * n.cos(Alpha) - Y * n.sin(Alpha)
+    RY = X * n.sin(Alpha) + Y * n.cos(Alpha)
+    return RX, RY
+
+
 t = s.Symbol('t')
 
 # законы движения, которые мне даны
@@ -31,7 +54,7 @@ Atau = s.diff(Vmod) # тангенсальное ускорение
 
 '''
 r = (Vmod * Vmod) / s.sqrt(Amod * Amod - Atau * Atau)
-
+w = s.diff(phi)
 
 step = 1000
 T = n.linspace(0, 10, step)
@@ -43,7 +66,7 @@ AX = n.zeros_like(T)
 AY = n.zeros_like(T)
 
 R = n.zeros_like(T)
-
+W = n.zeros_like(T)
 
 
 for i in n.arange(len(T)):
@@ -58,7 +81,7 @@ for i in n.arange(len(T)):
 
     # вектор кривизны
     R[i] = s.Subs(r, t, T[i])
-
+    W[i] = s.Subs(w, t, T[i])
 
 
 
@@ -72,20 +95,8 @@ Vp = axis.plot([X[0], X[0] + VX[0]], [Y[0], Y[0] + VY[0]], 'r')[0] # задал�
 Ap = axis.plot([X[0], X[0] + AX[0]], [Y[0], Y[0] + AY[0]], 'y')[0] # задали ускорение на графике
 Radius = axis.plot([0, X[0]], [0, Y[0]], 'c')[0] # задали радиус на графике
 
-
-# создаем стрелку у вектора скорости
-def Vect_arrow(X, Y, Valx, Valy):
-    a = 0.2 
-    b = 0.3
-    Arx = n.array([-b, 0, -b])
-    Ary = n.array([a, 0, -a])
-    alpha = math.atan2(Valy, Valx) # угол через тангенс
-    RotArx = Arx * n.cos(alpha) - Ary * n.sin(alpha) # тут используем знания из линейной алгебры
-    RotAry = Arx * n.sin(alpha) + Ary * n.cos(alpha) # используем матрицу поворотов
-
-    RotArx += X + Valx
-    RotAry += Y + Valy
-    return RotArx, RotAry
+Rx, Ry = Rot2D(X[0] + VX[0] / W[0], Y[0] + VY[0] / W[0], math.pi / 2)
+Radius_curvate, = axis.plot([X[0], Rx], [Y[0], Ry], 'blue')
 
 
 Rvx, Rvy = Vect_arrow(X[0], Y[0], VX[0], VY[0])
@@ -93,6 +104,9 @@ Varrow = axis.plot(Rvx, Rvy, 'red')[0] # отображаем стрелку н�
 Rax, Ray = Vect_arrow(X[0], Y[0], AX[0], AY[0])
 Aarrow = axis.plot(Rax, Ray, 'yellow')[0] # отображаем стрелку на поле и окрашиваем ее в красный цвет
 
+# рисуем стрелку для радиуса кривизны
+RArrowX, RArrowY = Vect_arrow(X[0], Y[0], Rx, Ry)
+RArrow = axis.plot(RArrowX, RArrowY, 'blue')[0]
 
 # создаем функцию для анимации
 def anim(i):
@@ -105,10 +119,15 @@ def anim(i):
     Aarrow.set_data(Rax, Ray) # отображаем стрелку в анимации
 
     Radius.set_data([0, X[i]], [0, Y[i]]) # строим радиус по точкам на графике
+    Rx, Ry = Rot2D(VX[i] / W[i], VY[i] / W[i], math.pi / 2)
+    Radius_curvate.set_data([X[i], X[i] + Rx], [Y[i], Y[i] + Ry])
+
+    RArrowX, RArrowY = Vect_arrow(X[i], Y[i], Rx, Ry)
+    RArrow.set_data(RArrowX, RArrowY)
 
 
 # тут создается сама анимация
-an = FuncAnimation(fig, anim, frames=step, interval = 1, repeat=False)
+an = FuncAnimation(fig, anim, frames=step, interval=100, repeat=False)
 
 # тут мы сохраняем анимацию в .gif
 an.save('lab1.gif', fps=30, writer = 'pillow') 
