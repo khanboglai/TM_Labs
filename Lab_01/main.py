@@ -130,4 +130,4 @@ def anim(i):
 an = FuncAnimation(fig, anim, frames=step, interval=100, repeat=False)
 
 # тут мы сохраняем анимацию в .gif
-an.save('lab1.gif', fps=30, writer = 'pillow') 
+an.save('lab1.gif', fps=30, writer='pillow') 
