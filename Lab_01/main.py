@@ -50,7 +50,7 @@ Atau = s.diff(Vmod) # тангенсальное ускорение
 
 # формула для радиуса кривизны
 '''
-Радиус кривизны - это квадрат скорости делный на корень из расности ускорений
+Радиус кривизны - это квадрат скорости деленый на корень из разсности квадратов ускорений
 
 '''
 r = (Vmod * Vmod) / s.sqrt(Amod * Amod - Atau * Atau)
@@ -65,7 +65,7 @@ VY = n.zeros_like(T)
 AX = n.zeros_like(T)
 AY = n.zeros_like(T)
 
-R = n.zeros_like(T)
+#R = n.zeros_like(T)
 W = n.zeros_like(T)
 
 
@@ -80,7 +80,7 @@ for i in n.arange(len(T)):
     AY[i] = s.Subs(Ay, t, T[i])
 
     # вектор кривизны
-    R[i] = s.Subs(r, t, T[i])
+    #R[i] = s.Subs(r, t, T[i])
     W[i] = s.Subs(w, t, T[i])
 
 
